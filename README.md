@@ -12,7 +12,7 @@ A simple, responsive web application that generates QR codes from any text or UR
 
 ## Demo
 
-Visit the live demo: [Your Vercel URL will be here]
+Visit the live demo: https://qr-code-generator-one-brown.vercel.app
 
 ## Technologies Used
 
