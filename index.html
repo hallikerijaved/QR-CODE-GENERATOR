@@ -1,298 +1,900 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Code Generator (QR & Bar)</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Load qrcode.js library for QR code generation -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <!-- Load JsBarcode library for Barcode generation -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
-    <style>
-        /* Custom styles for the font and background */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f9fc; /* Light background */
-            display: flex;
-            flex-direction: column; /* Allow content and footer to stack */
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeForge — QR & Barcode Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Styling the common code output area */
-        .code-output {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 24px;
-            padding: 16px;
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            min-height: 256px;
-        }
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c28;
+      --border: #2a2a3d;
+      --accent: #c8ff3e;
+      --accent2: #3ef0ff;
+      --text: #f0f0f8;
+      --muted: #6b6b88;
+      --error: #ff5c5c;
+      --success: #3eff9e;
+      --radius: 16px;
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+    }
 
-        /* Ensure the canvas/image inside qrcode div is centered */
-        #qrcode > canvas, #qrcode > img {
-            max-width: 100%;
-            height: auto;
-        }
+    html { scroll-behavior: smooth; }
 
-        /* Styling for the Barcode SVG container */
-        #barcode svg {
-            width: 90%;
-            height: 180px; /* fixed height for better barcode display */
-        }
-    </style>
+    body {
+      font-family: var(--font-display);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(16px, 4vw, 48px) clamp(12px, 4vw, 24px);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background glow */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -20%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70vw;
+      height: 60vh;
+      background: radial-gradient(ellipse at center, rgba(200,255,62,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -10%;
+      right: -10%;
+      width: 50vw;
+      height: 50vh;
+      background: radial-gradient(ellipse at center, rgba(62,240,255,0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 680px;
+      text-align: center;
+      margin-bottom: clamp(24px, 4vw, 40px);
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px 6px 8px;
+      margin-bottom: 20px;
+    }
+    .logo-dot {
+      width: 24px; height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-dot svg { width: 14px; height: 14px; }
+    .logo-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    h1 span { color: var(--accent); }
+
+    header p {
+      font-size: clamp(14px, 2vw, 16px);
+      color: var(--muted);
+      font-weight: 400;
+      max-width: 400px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ── Main card ── */
+    .card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: clamp(20px, 5vw, 40px);
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    /* ── Toggle pills ── */
+    .toggle-group {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px;
+      margin-bottom: 28px;
+      gap: 4px;
+    }
+
+    .toggle-group label {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .toggle-group input[type="radio"] { display: none; }
+
+    .toggle-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 100px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      transition: all 0.25s ease;
+      user-select: none;
+    }
+    .toggle-pill svg { width: 16px; height: 16px; }
+
+    .toggle-group input:checked + .toggle-pill {
+      background: var(--accent);
+      color: #0a0a0f;
+    }
+    .toggle-group input:checked + .toggle-pill svg path,
+    .toggle-group input:checked + .toggle-pill svg rect,
+    .toggle-group input:checked + .toggle-pill svg line { stroke: #0a0a0f; }
+
+    /* ── Input area ── */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px; height: 18px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px 14px 48px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,255,62,0.12);
+    }
+
+    /* ── Barcode format selector ── */
+    .format-select-wrap {
+      position: relative;
+    }
+    .format-select-wrap svg {
+      position: absolute;
+      right: 14px; top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      width: 16px; height: 16px;
+      color: var(--muted);
+    }
+    select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 40px 12px 16px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    select:focus { border-color: var(--accent); }
+
+    .options-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 420px) { .options-row { grid-template-columns: 1fr; } }
+
+    /* ── Generate button ── */
+    .btn-generate {
+      width: 100%;
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      border-radius: var(--radius);
+      padding: 15px 24px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.01em;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-generate::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.15);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(200,255,62,0.3); }
+    .btn-generate:hover::after { opacity: 1; }
+    .btn-generate:active { transform: translateY(0); }
+    .btn-generate svg { width: 18px; height: 18px; }
+
+    /* ── Message ── */
+    .message {
+      display: none;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 20px;
+      font-family: var(--font-mono);
+    }
+    .message.error { display: flex; align-items: center; gap: 8px; background: rgba(255,92,92,0.1); border: 1px solid rgba(255,92,92,0.3); color: var(--error); }
+    .message.success { display: flex; align-items: center; gap: 8px; background: rgba(62,255,158,0.08); border: 1px solid rgba(62,255,158,0.25); color: var(--success); }
+
+    /* ── Output area ── */
+    .output-section {
+      margin-top: 24px;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .output-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .output-canvas {
+      background: #fff;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 240px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .output-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: #ccc;
+    }
+    .output-placeholder svg { width: 40px; height: 40px; opacity: 0.4; }
+    .output-placeholder span { font-size: 13px; font-family: var(--font-mono); }
+
+    #qrcode canvas, #qrcode img { display: block; border-radius: 4px; }
+
+    #barcode-svg-output {
+      max-width: 100%;
+      height: 160px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* ── Download button ── */
+    .btn-download {
+      width: 100%;
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid rgba(62,240,255,0.35);
+      border-radius: var(--radius);
+      padding: 13px 24px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-download:hover { background: rgba(62,240,255,0.08); border-color: var(--accent2); }
+    .btn-download svg { width: 16px; height: 16px; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      z-index: 1;
+      position: relative;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(10,10,15,0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hidden utility */
+    .hidden { display: none !important; }
+
+    /* QR size selector */
+    .size-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .size-pill {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-display);
+    }
+    .size-pill.active, .size-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(200,255,62,0.06);
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field-group { display: flex; flex-direction: column; }
+
+    /* Color inputs row */
+    .color-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .color-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+    }
+    .color-input-wrap input[type="color"] {
+      width: 28px; height: 28px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0;
+      background: none;
+    }
+    .color-input-wrap span {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* Accordion for advanced options */
+    .accordion-btn {
+      width: 100%;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      padding: 11px 16px;
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s;
+      margin-bottom: 0;
+    }
+    .accordion-btn:hover { border-color: var(--accent); color: var(--text); }
+    .accordion-btn svg { transition: transform 0.25s; }
+    .accordion-btn.open svg { transform: rotate(180deg); }
+
+    .accordion-body {
+      display: none;
+      padding: 16px 0 0;
+    }
+    .accordion-body.open {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .color-row { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="w-full max-w-lg bg-white p-8 md:p-10 rounded-xl shadow-2xl border border-gray-100">
-        <!-- Header -->
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">
-            Universal Code Generator
-        </h1>
-        <p class="text-gray-500 mb-6 text-center">
-            Select a code type and enter any URL or text.
-        </p>
-
-        <!-- Code Type Selection -->
-        <div class="flex justify-center space-x-6 mb-6">
-            <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="codeType" value="qr" checked onchange="generateCode()"
-                       class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
-                <span class="ml-2 text-gray-700 font-semibold">QR Code</span>
-            </label>
-            <label class="inline-flex items-center cursor-pointer">
-                <input type="radio" name="codeType" value="barcode" onchange="generateCode()"
-                       class="form-radio h-4 w-4 text-blue-600 focus:ring-blue-500">
-                <span class="ml-2 text-gray-700 font-semibold">Bar Code</span>
-            </label>
-        </div>
-
-        <!-- Input Section -->
-        <div class="space-y-4">
-            <input
-                id="qr-input"
-                type="text"
-                placeholder="e.g., https://www.google.com or 1234567890"
-                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 shadow-sm transition duration-150 ease-in-out"
-                value="https://bio-self-seven.vercel.app/"
-            >
-
-            <button
-                id="generate-button"
-                onclick="generateCode()"
-                class="w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-md hover:shadow-lg"
-            >
-                Generate Code
-            </button>
-        </div>
-
-        <!-- Message Box -->
-        <div id="message-box" class="mt-4 text-center text-red-600 font-medium hidden p-3 bg-red-50 rounded-lg border border-red-200">
-            <!-- Error messages go here -->
-        </div>
-
-        <!-- Code Output Area -->
-        <div id="code-output-container" class="mt-8">
-            <!-- QR Code Output -->
-            <div id="qrcode" class="code-output">
-                <p class="text-gray-400">Your QR code will appear here.</p>
-            </div>
-            
-            <!-- Bar Code Output (Initially Hidden) -->
-            <div id="barcode" class="code-output hidden">
-                <!-- SVG will be injected here by JsBarcode -->
-                <svg id="barcode-svg-output"></svg>
-            </div>
-            
-            <!-- Download Button (Common for both types) -->
-            <button
-                id="download-button"
-                onclick="downloadCode()"
-                class="mt-4 w-full bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition duration-300 ease-in-out shadow-md hidden"
-            >
-                Download Code
-            </button>
-        </div>
-
+  <header>
+    <div class="logo-badge">
+      <div class="logo-dot">
+        <svg viewBox="0 0 14 14" fill="none">
+          <path d="M7 1L13 7L7 13L1 7L7 1Z" stroke="#0a0a0f" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">CodeForge</span>
     </div>
-    
-    <!-- Developer Credit Footer -->
-    <footer class="text-center mt-6 text-gray-500 text-sm w-full max-w-lg">
-        Developed by Javed Hallikeri
-    </footer>
+    <h1>Generate any<br><span>code, instantly</span></h1>
+    <p>Create QR codes and barcodes with custom colors, sizes, and formats.</p>
+  </header>
 
-    <script>
-        // Global variable to hold the QR code instance
-        let qrCodeInstance = null;
+  <div class="card">
 
-        // Utility to get the currently selected code type
-        function getSelectedCodeType() {
-            return document.querySelector('input[name="codeType"]:checked').value;
-        }
+    <!-- Toggle -->
+    <div class="toggle-group">
+      <label>
+        <input type="radio" name="codeType" value="qr" checked onchange="onTypeChange()">
+        <div class="toggle-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/>
+            <rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/>
+            <rect x="19" y="19" width="2" height="2"/>
+          </svg>
+          QR Code
+        </div>
+      </label>
+      <label>
+        <input type="radio" name="codeType" value="barcode" onchange="onTypeChange()">
+        <div class="toggle-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="5" x2="3" y2="19"/><line x1="7" y1="5" x2="7" y2="19"/>
+            <line x1="10" y1="5" x2="10" y2="19"/><line x1="14" y1="5" x2="14" y2="19"/>
+            <line x1="17" y1="5" x2="17" y2="19"/><line x1="21" y1="5" x2="21" y2="19"/>
+          </svg>
+          Barcode
+        </div>
+      </label>
+    </div>
 
-        // Utility to show messages (errors or success)
-        function showMessage(text, isError = true) {
-            const msgBox = document.getElementById('message-box');
-            msgBox.textContent = text;
-            msgBox.className = 'mt-4 text-center font-medium p-3 rounded-lg border';
-            
-            if (isError) {
-                msgBox.classList.add('text-red-600', 'bg-red-50', 'border-red-200');
-            } else {
-                msgBox.classList.add('text-green-600', 'bg-green-50', 'border-green-200');
-            }
+    <!-- Input -->
+    <div class="input-group">
+      <div class="input-wrapper">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+          <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+        </svg>
+        <input type="text" id="qr-input" placeholder="https://example.com or any text…" value="https://bio-self-seven.vercel.app/">
+      </div>
 
-            msgBox.classList.remove('hidden');
-        }
+      <!-- Barcode format (hidden for QR) -->
+      <div id="barcode-options" class="hidden">
+        <div class="field-label">Barcode Format</div>
+        <div class="format-select-wrap">
+          <select id="barcode-format">
+            <option value="CODE128">CODE128 — Universal</option>
+            <option value="EAN13">EAN-13 — Retail</option>
+            <option value="EAN8">EAN-8 — Short retail</option>
+            <option value="UPC">UPC-A — North America</option>
+            <option value="CODE39">CODE39 — Industry</option>
+            <option value="ITF14">ITF-14 — Logistics</option>
+          </select>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
 
-        // Utility to hide messages
-        function hideMessage() {
-            document.getElementById('message-box').classList.add('hidden');
-        }
+      <!-- Advanced options accordion -->
+      <button class="accordion-btn" id="adv-toggle" onclick="toggleAdvanced()">
+        Advanced options
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
 
-        // Function to generate the code (QR or Barcode)
-        function generateCode() {
-            const inputElement = document.getElementById('qr-input');
-            const data = inputElement.value.trim();
-            const qrCodeDiv = document.getElementById('qrcode');
-            const barcodeDiv = document.getElementById('barcode');
-            const downloadButton = document.getElementById('download-button');
-            const codeType = getSelectedCodeType();
-            
-            hideMessage();
+      <div class="accordion-body" id="adv-body">
 
-            // Clear previous outputs
-            qrCodeDiv.innerHTML = '<p class="text-gray-400">Your QR code will appear here.</p>';
-            document.getElementById('barcode-svg-output').innerHTML = ''; // Clear SVG
-            
-            if (!data) {
-                showMessage("Please enter some text or a link to generate the code.", true);
-                downloadButton.classList.add('hidden');
-                return;
-            }
+        <!-- QR Size -->
+        <div id="qr-size-group" class="field-group">
+          <div class="field-label">Size</div>
+          <div class="size-pills">
+            <span class="size-pill" onclick="setSize(128)">128px</span>
+            <span class="size-pill active" onclick="setSize(256)">256px</span>
+            <span class="size-pill" onclick="setSize(512)">512px</span>
+            <span class="size-pill" onclick="setSize(1024)">1024px</span>
+          </div>
+        </div>
 
-            downloadButton.classList.remove('hidden');
-            document.getElementById('download-button').textContent = `Download ${codeType === 'qr' ? 'QR Code (PNG)' : 'Bar Code (SVG)'}`;
-            document.getElementById('generate-button').textContent = `Generate ${codeType === 'qr' ? 'QR Code' : 'Bar Code'}`;
+        <!-- Colors -->
+        <div class="field-group">
+          <div class="field-label">Colors</div>
+          <div class="color-row">
+            <div class="color-input-wrap">
+              <input type="color" id="color-dark" value="#000000" onchange="updateColorLabel('dark')">
+              <span id="color-dark-label">Foreground</span>
+            </div>
+            <div class="color-input-wrap">
+              <input type="color" id="color-light" value="#ffffff" onchange="updateColorLabel('light')">
+              <span id="color-light-label">Background</span>
+            </div>
+          </div>
+        </div>
 
-            if (codeType === 'qr') {
-                barcodeDiv.classList.add('hidden');
-                qrCodeDiv.classList.remove('hidden');
-                
-                try {
-                    qrCodeDiv.innerHTML = '';
-                    const size = 256; 
-                    
-                    // Instantiate a new QR code
-                    qrCodeInstance = new QRCode(qrCodeDiv, {
-                        text: data,
-                        width: size,
-                        height: size,
-                        colorDark : "#000000",
-                        colorLight : "#ffffff",
-                        correctLevel : QRCode.CorrectLevel.H
-                    });
+        <!-- QR Error correction (QR only) -->
+        <div id="qr-ec-group" class="field-group">
+          <div class="field-label">Error Correction</div>
+          <div class="options-row">
+            <div class="format-select-wrap">
+              <select id="qr-ec">
+                <option value="H">High (H) — 30%</option>
+                <option value="Q">Quartile (Q) — 25%</option>
+                <option value="M">Medium (M) — 15%</option>
+                <option value="L">Low (L) — 7%</option>
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                } catch (error) {
-                    console.error("QR Code Generation Error:", error);
-                    showMessage("An error occurred during QR code generation. Please try again.", true);
-                    downloadButton.classList.add('hidden');
-                }
-            } else { // Barcode
-                qrCodeDiv.classList.add('hidden');
-                barcodeDiv.classList.remove('hidden');
-                
-                try {
-                    // JsBarcode writes directly to the SVG element
-                    JsBarcode("#barcode-svg-output", data, {
-                        format: "CODE128", // Common format
-                        displayValue: true,
-                        margin: 10,
-                        width: 2,
-                        height: 100,
-                        text: data.length > 30 ? data.substring(0, 30) + '...' : data // Truncate long text
-                    });
-                } catch (error) {
-                    console.error("Barcode Generation Error:", error);
-                    showMessage("Error generating Bar Code. Barcodes usually require alphanumeric input.", true);
-                    downloadButton.classList.add('hidden');
-                    barcodeDiv.innerHTML = '<p class="text-gray-400">Barcode input error.</p>';
-                }
-            }
-        }
-        
-        // Function to download the generated code
-        function downloadCode() {
-            const codeType = getSelectedCodeType();
-            const inputData = document.getElementById('qr-input').value.trim();
-            
-            // Sanitize the input for a safe filename
-            const safeFileName = inputData.substring(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'code';
-            const dateStr = new Date().toISOString().slice(0, 10);
-            let filename = `${safeFileName}_${dateStr}`;
-            let dataURL = null;
-            let mimeType = '';
+      <button class="btn-generate" id="generate-button" onclick="generateCode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Generate Code
+      </button>
+    </div>
 
-            if (codeType === 'qr') {
-                // QR Code (Canvas -> PNG)
-                const canvas = document.getElementById('qrcode').querySelector('canvas');
-                if (canvas) {
-                    dataURL = canvas.toDataURL("image/png");
-                    filename += '.png';
-                    mimeType = 'image/png';
-                }
-            } else {
-                // Bar Code (SVG -> SVG file)
-                const barcodeSvg = document.getElementById('barcode-svg-output');
-                if (barcodeSvg && barcodeSvg.hasChildNodes()) {
-                    const serializer = new XMLSerializer();
-                    let svgString = serializer.serializeToString(barcodeSvg);
-                    // Add standard SVG/XML headers
-                    svgString = '<?xml version="1.0" standalone="no"?>\r\n' + svgString;
-                    
-                    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-                    dataURL = URL.createObjectURL(blob);
-                    filename += '.svg';
-                    mimeType = 'image/svg+xml';
-                }
-            }
+    <!-- Message -->
+    <div id="message-box" class="message"></div>
 
-            if (dataURL) {
-                // Create a temporary link element and trigger download
-                const link = document.createElement('a');
-                link.href = dataURL;
-                link.download = filename;
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+    <!-- Output -->
+    <div id="output-section" class="output-section hidden">
+      <div class="output-label">Preview</div>
 
-                // Clean up the object URL created for the Barcode Blob
-                if (codeType === 'barcode') {
-                    URL.revokeObjectURL(dataURL); 
-                }
+      <div class="output-canvas" id="output-canvas">
+        <div id="qrcode"></div>
+        <svg id="barcode-svg-output" class="hidden"></svg>
+        <div class="output-placeholder hidden" id="placeholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Your code will appear here</span>
+        </div>
+      </div>
 
-                showMessage(`Download started: ${filename}`, false);
-                setTimeout(hideMessage, 3000); 
-            } else {
-                showMessage(`Could not find the generated ${codeType} to download. Please generate it first.`, true);
-            }
-        }
+      <div class="divider"></div>
 
-        // Automatically generate the initial QR code when the page loads
-        window.onload = function() {
-            generateCode();
-        };
+      <button class="btn-download" id="download-button" onclick="downloadCode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Download
+      </button>
+    </div>
 
-    </script>
+  </div>
+
+  <footer>
+    <p>CodeForge · QR & Barcode Generator · Works entirely in your browser</p>
+  </footer>
+
+<script>
+  let qrCodeInstance = null;
+  let selectedSize = 256;
+
+  function getType() {
+    return document.querySelector('input[name="codeType"]:checked').value;
+  }
+
+  function setSize(s) {
+    selectedSize = s;
+    document.querySelectorAll('.size-pill').forEach(el => {
+      el.classList.toggle('active', el.textContent.trim().startsWith(s));
+    });
+  }
+
+  function toggleAdvanced() {
+    const btn = document.getElementById('adv-toggle');
+    const body = document.getElementById('adv-body');
+    btn.classList.toggle('open');
+    body.classList.toggle('open');
+  }
+
+  function onTypeChange() {
+    const isQR = getType() === 'qr';
+    document.getElementById('barcode-options').classList.toggle('hidden', isQR);
+    document.getElementById('qr-size-group').classList.toggle('hidden', !isQR);
+    document.getElementById('qr-ec-group').classList.toggle('hidden', !isQR);
+    clearOutput();
+  }
+
+  function clearOutput() {
+    document.getElementById('output-section').classList.add('hidden');
+    document.getElementById('qrcode').innerHTML = '';
+    document.getElementById('barcode-svg-output').innerHTML = '';
+    document.getElementById('barcode-svg-output').classList.add('hidden');
+    hideMessage();
+    qrCodeInstance = null;
+  }
+
+  function showMessage(text, type = 'error') {
+    const box = document.getElementById('message-box');
+    const icon = type === 'error'
+      ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+      : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`;
+    box.innerHTML = icon + text;
+    box.className = `message ${type}`;
+  }
+
+  function hideMessage() {
+    const box = document.getElementById('message-box');
+    box.className = 'message';
+    box.innerHTML = '';
+  }
+
+  function updateColorLabel(which) {
+    const val = document.getElementById(`color-${which}`).value;
+    document.getElementById(`color-${which}-label`).textContent = val.toUpperCase();
+  }
+
+  function generateCode() {
+    const data = document.getElementById('qr-input').value.trim();
+    const btn = document.getElementById('generate-button');
+
+    hideMessage();
+    if (!data) {
+      showMessage('Please enter some text or a URL first.', 'error');
+      return;
+    }
+
+    // Loading state
+    btn.innerHTML = `<span class="spinner"></span> Generating…`;
+    btn.disabled = true;
+
+    setTimeout(() => {
+      try {
+        _doGenerate(data);
+      } finally {
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Code`;
+        btn.disabled = false;
+      }
+    }, 40);
+  }
+
+  function _doGenerate(data) {
+    const type = getType();
+    const colorDark = document.getElementById('color-dark').value;
+    const colorLight = document.getElementById('color-light').value;
+    const outputSection = document.getElementById('output-section');
+
+    document.getElementById('qrcode').innerHTML = '';
+    document.getElementById('barcode-svg-output').innerHTML = '';
+
+    if (type === 'qr') {
+      document.getElementById('barcode-svg-output').classList.add('hidden');
+
+      const ecMap = { H: QRCode.CorrectLevel.H, Q: QRCode.CorrectLevel.Q, M: QRCode.CorrectLevel.M, L: QRCode.CorrectLevel.L };
+      const ecVal = document.getElementById('qr-ec').value;
+
+      try {
+        const qrDiv = document.getElementById('qrcode');
+        qrCodeInstance = new QRCode(qrDiv, {
+          text: data,
+          width: selectedSize,
+          height: selectedSize,
+          colorDark,
+          colorLight,
+          correctLevel: ecMap[ecVal] ?? QRCode.CorrectLevel.H
+        });
+
+        // Wait for QRCode to render its canvas/img, then add border canvas
+        setTimeout(() => {
+          addBorderedCanvas(qrDiv, colorLight);
+        }, 100);
+
+        outputSection.classList.remove('hidden');
+        showMessage('QR code generated successfully!', 'success');
+        setTimeout(hideMessage, 3000);
+      } catch(e) {
+        showMessage('Error generating QR code. Try shortening your input.', 'error');
+      }
+
+    } else {
+      // Barcode
+      document.getElementById('barcode-svg-output').classList.remove('hidden');
+      const fmt = document.getElementById('barcode-format').value;
+
+      try {
+        JsBarcode('#barcode-svg-output', data, {
+          format: fmt,
+          displayValue: true,
+          margin: 12,
+          width: 2,
+          height: 100,
+          background: colorLight,
+          lineColor: colorDark,
+          text: data.length > 40 ? data.substring(0, 40) + '…' : data,
+          fontSize: 14,
+        });
+        outputSection.classList.remove('hidden');
+        showMessage('Barcode generated successfully!', 'success');
+        setTimeout(hideMessage, 3000);
+      } catch(e) {
+        showMessage('Error: this format may not support your input. Try CODE128 for any text.', 'error');
+        document.getElementById('barcode-svg-output').classList.add('hidden');
+      }
+    }
+  }
+
+  // Draws the QR canvas with a padded, rounded border into a new canvas shown in #qrcode
+  function addBorderedCanvas(qrDiv, bgColor) {
+    const original = qrDiv.querySelector('canvas') || qrDiv.querySelector('img');
+    if (!original) return;
+
+    const BORDER = Math.round(selectedSize * 0.1); // 10% padding on each side
+    const RADIUS = Math.round(BORDER * 0.6);
+    const totalSize = selectedSize + BORDER * 2;
+
+    const bordered = document.createElement('canvas');
+    bordered.width = totalSize;
+    bordered.height = totalSize;
+    bordered.id = 'qr-bordered-canvas';
+    bordered.style.borderRadius = '8px';
+
+    const ctx = bordered.getContext('2d');
+
+    // Draw rounded background
+    ctx.beginPath();
+    ctx.moveTo(RADIUS, 0);
+    ctx.lineTo(totalSize - RADIUS, 0);
+    ctx.quadraticCurveTo(totalSize, 0, totalSize, RADIUS);
+    ctx.lineTo(totalSize, totalSize - RADIUS);
+    ctx.quadraticCurveTo(totalSize, totalSize, totalSize - RADIUS, totalSize);
+    ctx.lineTo(RADIUS, totalSize);
+    ctx.quadraticCurveTo(0, totalSize, 0, totalSize - RADIUS);
+    ctx.lineTo(0, RADIUS);
+    ctx.quadraticCurveTo(0, 0, RADIUS, 0);
+    ctx.closePath();
+    ctx.fillStyle = bgColor || '#ffffff';
+    ctx.fill();
+
+    // Draw original QR on top with offset
+    if (original.tagName === 'CANVAS') {
+      ctx.drawImage(original, BORDER, BORDER, selectedSize, selectedSize);
+    } else {
+      // img element
+      const tmpImg = new Image();
+      tmpImg.onload = () => ctx.drawImage(tmpImg, BORDER, BORDER, selectedSize, selectedSize);
+      tmpImg.src = original.src;
+    }
+
+    // Replace content with bordered canvas only
+    qrDiv.innerHTML = '';
+    qrDiv.appendChild(bordered);
+  }
+
+  function downloadCode() {
+    const type = getType();
+    const inputData = document.getElementById('qr-input').value.trim();
+    const safe = inputData.substring(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'code';
+    const date = new Date().toISOString().slice(0, 10);
+    const base = `codeforge_${safe}_${date}`;
+
+    if (type === 'qr') {
+      // Prefer the bordered canvas we created
+      const canvas = document.getElementById('qr-bordered-canvas') || document.querySelector('#qrcode canvas');
+
+      if (canvas) {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = base + '.png';
+        a.click();
+        showMessage('Download started: ' + base + '.png', 'success');
+        setTimeout(hideMessage, 3000);
+      } else {
+        showMessage('Generate a code first.', 'error');
+      }
+    } else {
+      const svg = document.getElementById('barcode-svg-output');
+      if (!svg || !svg.hasChildNodes()) { showMessage('Generate a code first.', 'error'); return; }
+      const serializer = new XMLSerializer();
+      const svgString = '<?xml version="1.0"?>\r\n' + serializer.serializeToString(svg);
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = base + '.svg';
+      a.click();
+      URL.revokeObjectURL(url);
+      showMessage('Download started: ' + base + '.svg', 'success');
+      setTimeout(hideMessage, 3000);
+    }
+  }
+
+  window.onload = generateCode;
+</script>
 </body>
 </html>
