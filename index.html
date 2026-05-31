@@ -3,7 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CodeForge — QR & Barcode Generator</title>
+  <title>CodeForge — Free QR Code &amp; Barcode Generator Online</title>
+
+  <!-- Primary SEO -->
+  <meta name="description" content="Generate QR codes and barcodes instantly for free. Supports URLs, text, EAN-13, CODE128, UPC and more. Custom colors, sizes, and instant PNG/SVG download. No sign-up required.">
+  <meta name="keywords" content="QR code generator, barcode generator, free QR code, online QR code maker, EAN-13, CODE128, UPC barcode, QR code download, custom QR code">
+  <meta name="author" content="CodeForge">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="canonical" href="https://codeforge.app/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://codeforge.app/">
+  <meta property="og:title" content="CodeForge — Free QR Code &amp; Barcode Generator">
+  <meta property="og:description" content="Generate QR codes and barcodes instantly for free. Custom colors, sizes, and formats. Download as PNG or SVG. No sign-up required.">
+  <meta property="og:image" content="https://codeforge.app/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="CodeForge">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@codeforge">
+  <meta name="twitter:title" content="CodeForge — Free QR Code &amp; Barcode Generator">
+  <meta name="twitter:description" content="Generate QR codes and barcodes instantly for free. Custom colors, sizes, and formats. No sign-up required.">
+  <meta name="twitter:image" content="https://codeforge.app/og-image.png">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "CodeForge",
+    "url": "https://codeforge.app/",
+    "description": "Free online QR code and barcode generator. Supports URLs, text, EAN-13, CODE128, UPC and more. Custom colors, sizes and instant PNG/SVG download.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "featureList": [
+      "QR Code generation", "Barcode generation", "Custom colors",
+      "Multiple sizes (128px to 1024px)",
+      "Formats: CODE128, EAN-13, EAN-8, UPC-A, CODE39, ITF-14",
+      "PNG and SVG download", "No sign-up required", "Works entirely in browser"
+    ],
+    "creator": { "@type": "Organization", "name": "CodeForge" }
+  }
+  </script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0f'/%3E%3Crect x='5' y='5' width='9' height='9' rx='1.5' fill='none' stroke='%23c8ff3e' stroke-width='2'/%3E%3Crect x='7' y='7' width='5' height='5' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='18' y='5' width='9' height='9' rx='1.5' fill='none' stroke='%23c8ff3e' stroke-width='2'/%3E%3Crect x='20' y='7' width='5' height='5' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='5' y='18' width='9' height='9' rx='1.5' fill='none' stroke='%23c8ff3e' stroke-width='2'/%3E%3Crect x='7' y='20' width='5' height='5' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='18' y='18' width='4' height='4' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='24' y='18' width='3' height='3' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='18' y='24' width='3' height='3' rx='0.5' fill='%23c8ff3e'/%3E%3Crect x='24' y='24' width='3' height='3' rx='0.5' fill='%23c8ff3e'/%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
@@ -550,7 +599,7 @@
           <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
           <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
         </svg>
-        <input type="text" id="qr-input" placeholder="https://example.com or any text…" value="https://javed.page.gd/">
+        <input type="text" id="qr-input" placeholder="https://example.com or any text…" value="https://bio-self-seven.vercel.app/">
       </div>
 
       <!-- Barcode format (hidden for QR) -->
